@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% block title %}
+    Gains
+{% endblock %}
+
+{% block main %}
+<div>
+    <h4>CONGRATS ON YOUR EARNINGS!!!</h4>
+    <h5>Remember to use it Wisely</h5>
+    <form action="/gain" method="post">
+        <div class="input-group mb-3">
+            <span class="input-group-text">₹</span>
+            <input autocomplete="off" autofocus class="form-control" id="gain" name="gain" placeholder="Enter Gained Amount" type="number">
+        </div>
+        <div class="input-group">
+            <span class="input-group-text">Description</span>
+            <textarea class="form-control" aria-label="With textarea" id="description" name="description"></textarea>
+          </div>
+          <br>
+        <button class="btn btn-primary" type="submit">ADD</button>
+    </form>
+</div>
+{% endblock %}
