@@ -220,6 +220,28 @@ def gain():
 @app.route("/history")
 @login_required
 def history():
+    check = db.execute('SELECT username FROM users WHERE id = ?', session['user_id'])
+    if check[0]['username'] == 'admin':
+        users = db.execute('SELECT id, username, cash, spent, gains, income FROM users')
+        loop = len(users)
+        ids = []
+        usernames = []
+        cashes = []
+        spents = []
+        gains = []
+        incomes = []
+
+        for i in range(loop):
+            ids.append(users[i]['id'])
+            usernames.append(users[i]['username'])
+            cashes.append(users[i]['cash'])
+            spents.append(users[i]['spent'])
+            gains.append(users[i]['gains'])
+            incomes.append(users[i]['income'])
+
+        return render_template("admin_user_his.html", ids=ids, usernames=usernames, cashes=cashes, spents=spents, gains=gains, incomes=incomes, loop=loop)
+
+
     history = db.execute('SELECT description, cashflow FROM history WHERE id = ?', session['user_id'])
     loop = len(history)
     jinga_loop = 0
