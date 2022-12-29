@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Log In
+{% endblock %}
+
+{% block main %}
+<div>
+    <h1>Hey USER,</h1>
+    <h3 >Join us to not SPEND more than you Thought</h3>
+    <h4>Know everything related to your cashflow</h4>
+    <br>
+    <h3>So, Lets Start your new Journey in the world of Finance</h3>
+    <hr>
+    <form action="/login" method="post">
+        <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">@</span>
+            <input autofocus type="text" class="form-control mx-auto w-auto" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1" id="username" name="username">
+          </div>
+        <div class="mb-3">
+            <input class="form-control" id="password" name="password" placeholder="Password" type="password">
+        </div>
+        <button class="btn btn-primary" type="submit">Log In</button>
+    </form>
+    <p style="color: #ff0000;text-align: left;">Register if you are new.</p>
+</div>
+{% endblock %}

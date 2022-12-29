@@ -1,0 +1,76 @@
+/* *
+{
+    background-color:#0D98BA;
+} */
+/* Size for brand */
+nav .navbar-brand
+{
+    font-size: xx-large;
+}
+
+/* Colors for brand */
+nav .navbar-brand .blue
+{
+    color: #537fbe;
+}
+nav .navbar-brand .red
+{
+    color: #ea433b;
+}
+nav .navbar-brand .yellow
+{
+    color: #f5b82e;
+}
+nav .navbar-brand .green
+{
+    color: #2e944b;
+}
+textarea
+{
+    resize: none;
+}
+.center
+{
+    text-align: left;
+}
+.right
+{
+    text-align: right;
+}
+.log
+{
+    text-align: left;
+}
+.hero-image
+{
+    background-image: url("/static/white_back.webp");
+    background-color: #cccccc;
+    height: 500px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    position: relative;
+    border-radius:4%
+}
+
+.hero-text
+{
+    text-align: center;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+}
+
+.about-image
+{
+    background-image: url("/static/harvar_build.jpg");
+    background-color: #cccccc;
+    height: 500px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    position: relative;
+    border-radius:4%
+}

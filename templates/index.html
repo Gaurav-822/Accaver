@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+{% block title %}
+    Home Page
+{% endblock %}
+{% block main %}
+<div class="hero-image">
+    <div class="hero-text">
+        <p style="font-size: 50px; color: #6ccde5">
+            <h1 style="color: green" class="display-4">WELCOME TO YOUR COLLEGE FINANCE ASSISTANT TOOL</h1>
+        </p>
+    </div>
+    <hr>
+    <br>
+    <div style="text-align: right;"><h5> INCOME : {{ income }} </h5></div>
+    <br>
+    <h1 style="color: rgb(0, 51, 255);" class="display-3">TRACKER</h1>
+<table class="table">
+    <tr>
+        <td>
+    <table class="table">
+        <h4 style="color:red">CASH LEFT</h4>
+    <tbody>
+        <tr>
+            <td>{{ cash }}</td>
+        </tr>
+    </tbody>
+    </table>
+    </td>
+    <td>
+    <table class="table">
+        <h4>SPENT</h4>
+        <tbody>
+            <tr>
+                <td>{{ spent }}</td>
+            </tr>
+        </tbody>
+    </table>
+    </td>
+    <td>
+        <table class="table">
+            <h4 style="color:#00ff00">GAINS</h4>
+            <tbody>
+                <tr>
+                    <td>{{ gains }}</td>
+                </tr>
+            </tbody>
+        </table>
+        </td>
+    </tr>
+</table>
+<div style="text-align: left;">
+    <h4 class="display-4">DID any <span style="color: #4c02ad;">Transact</span> ?</h4>
+    <h5 class="display-5">Don't forget to <mark><b>Register</b></mark>  it here :)</h5>
+    <hr>
+    <div>
+        <form action="/spent" method="post">
+            <div class="input-group mb-3">
+                <span class="input-group-text">₹</span>
+                <input autocomplete="off" class="form-control" id="spent" name="spent" placeholder="Quick Pay" type="number">
+            </div>
+            <button class="btn btn-primary" type="submit">PAY</button>
+        </form>
+    </div>
+</div>
+</div>
+{% endblock %}
