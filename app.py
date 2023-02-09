@@ -29,14 +29,14 @@ Session(app)
 # db = conn.cursor()
 
 uri = os.getenv("postgres://gaurav:EVH8zrygwNmSvdzcf6yowvQE3yk8To63@dpg-cen85tp4reb386762n1g-a/data_rodq")
-if uri.startswith("postgres://"):
-    uri = uri.replace("postgres://", "postgresql://")
+# if uri.startswith("postgres://"):
+#     uri = uri.replace("postgres://", "postgresql://")
 db = SQL(uri)
 
-db.execute("CREATE TABLE tablename (colname SERIAL);")
-db.execute("CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY NOT NULL, username TEXT NOT NULL, hash TEXT NOT NULL, cash INT, spent INT, gains INT, income INT);")
+# db.execute("CREATE TABLE tablename (colname SERIAL);")
+db.execute("CREATE TABLE IF NOT EXISTS users (id PRIMARY KEY INTEGER AUTOINCREMENT NOT NULL, username TEXT NOT NULL, hash TEXT NOT NULL, cash INTEGER, spent INTEGER, gains INTEGER, income INTEGER);")
 # db.execute("CREATE UNIQUE INDEX IF NOT EXISTS username ON users (username);")
-db.execute("CREATE TABLE IF NOT EXISTS history(id INT NOT NULL, description TEXT, cashflow INT);")
+db.execute("CREATE TABLE IF NOT EXISTS history(id INTEGER NOT NULL, description TEXT, cashflow INTEGER);")
 
 @app.after_request
 def after_request(response):
