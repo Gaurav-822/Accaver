@@ -8,6 +8,10 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from helpers import apology, login_required
 
+# To ignore warnings
+import warnings
+warnings.filterwarnings('ignore')
+
 # Configure application
 app = Flask(__name__)
 
@@ -24,9 +28,9 @@ Session(app)
 conn = psycopg2.connect(database="data_rodq", user = "gaurav", password = "EVH8zrygwNmSvdzcf6yowvQE3yk8To63", host = "dpg-cen85tp4reb386762n1g-a", port = "5432")
 db = conn.cursor()
 
-db.execute("CREATE TABLE [IF NOT EXISTS] users (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT NOT NULL, hash TEXT NOT NULL, cash INTEGER, spent INTEGER, gains INTEGER, income INTEGER);")
-db.execute("CREATE UNIQUE INDEX [IF NOT EXISTS] username ON users (username);")
-db.execute("CREATE TABLE [IF NOT EXISTS] history(id INTEGER NOT NULL, description TEXT, cashflow INTEGER);")
+db.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT NOT NULL, hash TEXT NOT NULL, cash INTEGER, spent INTEGER, gains INTEGER, income INTEGER);")
+# db.execute("CREATE UNIQUE INDEX IF NOT EXISTS username ON users (username);")
+db.execute("CREATE TABLE IF NOT EXISTS history(id INTEGER NOT NULL, description TEXT, cashflow INTEGER);")
 
 @app.after_request
 def after_request(response):
