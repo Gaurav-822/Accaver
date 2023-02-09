@@ -28,7 +28,10 @@ Session(app)
 # conn = psycopg2.connect(database="data_rodq", user = "gaurav", password = "EVH8zrygwNmSvdzcf6yowvQE3yk8To63", host = "dpg-cen85tp4reb386762n1g-a", port = "5432")
 # db = conn.cursor()
 
-db = SQL("postgres://gaurav:EVH8zrygwNmSvdzcf6yowvQE3yk8To63@dpg-cen85tp4reb386762n1g-a:5432/data_rodq")
+uri = os.getenv("postgres://gaurav:EVH8zrygwNmSvdzcf6yowvQE3yk8To63@dpg-cen85tp4reb386762n1g-a/data_rodq")
+if uri.startswith("postgres://"):
+    uri = uri.replace("postgres://", "postgresql://")
+db = SQL(uri)
 
 db.execute("CREATE TABLE tablename (colname SERIAL);")
 db.execute("CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY NOT NULL, username TEXT NOT NULL, hash TEXT NOT NULL, cash INT, spent INT, gains INT, income INT);")
