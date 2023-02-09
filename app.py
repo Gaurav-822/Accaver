@@ -29,7 +29,7 @@ conn = psycopg2.connect(database="data_rodq", user = "gaurav", password = "EVH8z
 db = conn.cursor()
 
 db.execute("CREATE TABLE tablename (colname SERIAL);")
-db.execute("CREATE TABLE IF NOT EXISTS users (id INT SERIAL PRIMARY KEY NOT NULL, username TEXT NOT NULL, hash TEXT NOT NULL, cash INT, spent INT, gains INT, income INT);")
+db.execute("# CREATE TABLE IF NOT EXISTS users (id INT SERIAL PRIMARY KEY NOT NULL, username TEXT NOT NULL, hash TEXT NOT NULL, cash INT, spent INT, gains INT, income INT);")
 # db.execute("CREATE UNIQUE INDEX IF NOT EXISTS username ON users (username);")
 db.execute("CREATE TABLE IF NOT EXISTS history(id INT NOT NULL, description TEXT, cashflow INT);")
 
