@@ -1,7 +1,7 @@
 import os
 
-from cs50 import SQL
-# import psycopg2
+# from cs50 import SQL
+import psycopg2
 from flask import Flask, flash, redirect, render_template, request, session
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -25,18 +25,13 @@ Session(app)
 
 # Configure CS50 Library to use SQLite database
 # db = SQL("sqlite:///data.db")
-# conn = psycopg2.connect(database="data_rodq", user = "gaurav", password = "EVH8zrygwNmSvdzcf6yowvQE3yk8To63", host = "dpg-cen85tp4reb386762n1g-a", port = "5432")
-# db = conn.cursor()
+conn = psycopg2.connect(database="data_rodq", user = "gaurav", password = "EVH8zrygwNmSvdzcf6yowvQE3yk8To63", host = "dpg-cen85tp4reb386762n1g-a", port = "5432")
+db = conn.cursor()
 
-# uri = os.getenv("postgres://gaurav:EVH8zrygwNmSvdzcf6yowvQE3yk8To63@dpg-cen85tp4reb386762n1g-a/data_rodq")
-# if uri.startswith("postgres://"):
-#     uri = uri.replace("postgres://", "postgresql://")
-db = SQL("postgres://gaurav:EVH8zrygwNmSvdzcf6yowvQE3yk8To63@dpg-cen85tp4reb386762n1g-a/data_rodq")
-
-# db.execute("CREATE TABLE tablename (colname SERIAL);")
-db.execute("CREATE TABLE IF NOT EXISTS users (id PRIMARY KEY INTEGER AUTOINCREMENT NOT NULL, username TEXT NOT NULL, hash TEXT NOT NULL, cash INTEGER, spent INTEGER, gains INTEGER, income INTEGER);")
+db.execute("CREATE TABLE tablename (colname SERIAL);")
+db.execute("CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY NOT NULL, username TEXT NOT NULL, hash TEXT NOT NULL, cash INT, spent INT, gains INT, income INT);")
 # db.execute("CREATE UNIQUE INDEX IF NOT EXISTS username ON users (username);")
-db.execute("CREATE TABLE IF NOT EXISTS history(id INTEGER NOT NULL, description TEXT, cashflow INTEGER);")
+db.execute("CREATE TABLE IF NOT EXISTS history(id INT NOT NULL, description TEXT, cashflow INT);")
 
 @app.after_request
 def after_request(response):
@@ -51,10 +46,10 @@ def after_request(response):
 @login_required
 def index():
     bank = db.execute("SELECT cash, spent, income, gains FROM users WHERE id=?;", session['user_id'])
-    cash = bank[0]['cash']
-    spent = bank[0]['spent']
-    income = bank[0]['income']
-    gains = bank[0]['gains']
+    cash = bank[0][0]
+    spent = bank[0][1]
+    income = bank[0][2]
+    gains = bank[0][3]
     
     return render_template('index.html', cash=cash, spent=spent, income=income, gains=gains)
 
@@ -78,14 +73,14 @@ def login():
             return apology("must provide password", 403)
 
         # Query database for username
-        rows = db.execute("SELECT * FROM users WHERE username = ?;", request.form.get("username"))
+        rows = db.execute("SELECT hash, id FROM users WHERE username = ?;", request.form.get("username"))
 
         # Ensure username exists and password is correct
-        if len(rows) != 1 or not check_password_hash(rows[0]["hash"], request.form.get("password")):
+        if len(rows) != 1 or not check_password_hash(rows[0][0], request.form.get("password")):
             return apology("invalid username and/or password", 403)
 
         # Remember which user has logged in
-        session["user_id"] = rows[0]["id"]
+        session["user_id"] = rows[0][1]
 
         # Redirect user to home page
         return redirect("/")
@@ -186,8 +181,8 @@ def spent():
         return apology("Set your gains via Gains Section.")
 
     d = db.execute("SELECT cash, spent FROM users WHERE id = ?;", session['user_id'])
-    check = d[0]['cash']
-    i_spent = d[0]['spent']
+    check = d[0][0]
+    i_spent = d[0][1]
 
     if pay > check:
         return apology("You Don't Have Enough Money to make this transactions")
@@ -226,8 +221,8 @@ def gain():
     if gain < 0:
         return apology("Your Gains cannot be Negative. Register this via Spent Section.")
     d = db.execute("SELECT cash, gains FROM users WHERE id = ?;", session['user_id'])
-    i_cash = d[0]['cash']
-    i_gains = d[0]['gains']
+    i_cash = d[0][0]
+    i_gains = d[0][1]
     db.execute("UPDATE users SET cash = ?, gains = ? WHERE id = ?;", i_cash+gain,i_gains+gain, session['user_id'])
     db.execute("INSERT INTO history VALUES(?, ?, ?);", session['user_id'], description, gain)
 
@@ -249,12 +244,12 @@ def history():
         incomes = []
 
         for i in range(loop):
-            ids.append(users[i]['id'])
-            usernames.append(users[i]['username'])
-            cashes.append(users[i]['cash'])
-            spents.append(users[i]['spent'])
-            gains.append(users[i]['gains'])
-            incomes.append(users[i]['income'])
+            ids.append(users[i][0])
+            usernames.append(users[i][1])
+            cashes.append(users[i][2])
+            spents.append(users[i][3])
+            gains.append(users[i][4])
+            incomes.append(users[i][5])
 
         return render_template("admin_user_his.html", ids=ids, usernames=usernames, cashes=cashes, spents=spents, gains=gains, incomes=incomes, loop=loop)
 
@@ -266,11 +261,11 @@ def history():
     cashflows = []
 
     for i in range(loop):
-        his = history[loop - i - 1]['description']
+        his = history[loop - i - 1][1]
         if his == "RESET":
             break
         descriptions.append(his)
-        cashflows.append(history[loop - i - 1]['cashflow'])
+        cashflows.append(history[loop - i - 1][2])
 
         jinga_loop += 1
     return render_template("history.html", jinga_loop=jinga_loop, descriptions=descriptions, cashflows=cashflows)
