@@ -20,7 +20,7 @@ app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
 # Make Connection to the database
-engine = create_engine('postgresql://gaurav:sytApgILs5xeFSw2dHPPMUjOfbRlJPU4@dpg-cfjgb31a6gductijtfgg-a/database_li2o', echo = False, connect_args={"check_same_thread": False})
+engine = create_engine('postgresql://gaurav:sytApgILs5xeFSw2dHPPMUjOfbRlJPU4@dpg-cfjgb31a6gductijtfgg-a.singapore-postgres.render.com/database_li2o', echo = False, connect_args={"check_same_thread": False})
 conn = engine.connect()
 
 # Make Tables:
