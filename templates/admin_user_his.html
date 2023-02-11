@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+{% block title %}
+    WELCOME ADMIN
+{% endblock %}
+
+{% block main %}
+<hr>
+<table class="table">
+    <tr>
+        <td>Id.No</td>
+        <td>Username</td>
+        <td>Cash</td>
+        <td>Spent</td>
+        <td>Gains</td>
+        <td>Income</td>
+    </tr>
+    {% for i in range(loop) %}
+    <tr>
+        <td>{{ ids[i] }}</td>
+        <td>{{ usernames[i] }}</td>
+        <td>{{ cashes[i] }}</td>
+        <td>{{ spents[i] }}</td>
+        <td>{{ gains[i] }}</td>
+        <td>{{ incomes[i] }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}
