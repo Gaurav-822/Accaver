@@ -1,6 +1,7 @@
 import os
 
-from cs50 import SQL
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, Text, text, delete, insert
+from sqlalchemy.sql.expression import update
 from flask import Flask, flash, redirect, render_template, request, session
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -18,8 +19,31 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
-# Configure CS50 Library to use SQLite database
-db = SQL("sqlite:///data.db")
+# Make Connection to the database
+engine = create_engine('sqlite:///data.db', echo = False, connect_args={"check_same_thread": False})
+conn = engine.connect()
+
+# Make Tables:
+meta = MetaData()
+users = Table(
+    'users', meta,
+    Column('id', Integer, primary_key = True),
+    Column('username', Text),
+    Column('hash', Text),
+    Column('cash', Integer),
+    Column('spent', Integer),
+    Column('gains', Integer),
+    Column('income', Integer),
+)
+
+history = Table(
+    'history', meta,
+    Column('id', Integer),
+    Column('descript', Text),
+    Column('cashflow', Integer),
+)
+
+meta.create_all(engine)
 
 @app.after_request
 def after_request(response):
@@ -29,19 +53,24 @@ def after_request(response):
     response.headers["Pragma"] = "no-cache"
     return response
 
-# Requires Change
+# STATUS: Done
 @app.route("/", methods=['GET', 'POST'])
 @login_required
 def index():
-    bank = db.execute("SELECT cash, spent, income, gains FROM users WHERE id=?", session['user_id'])
-    cash = bank[0]['cash']
-    spent = bank[0]['spent']
-    income = bank[0]['income']
-    gains = bank[0]['gains']
-    
-    return render_template('index.html', cash=cash, spent=spent, income=income, gains=gains)
+    user = text("SELECT id, cash, spent, income, gains FROM users")
+    result = conn.execute(user)
+    for row in result:
+        if row[0] == session["user_id"]:
+            cash = row[1]
+            spent = row[2]
+            income = row[3]
+            gains = row[4]
 
-# Status: DONE
+            return render_template('index.html', cash=cash, spent=spent, income=income, gains=gains)
+            
+    return apology('Something Unexpected Happened')
+
+# STATUS: Done
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """Log user in"""
@@ -61,23 +90,24 @@ def login():
             return apology("must provide password", 403)
 
         # Query database for username
-        rows = db.execute("SELECT * FROM users WHERE username = ?", request.form.get("username"))
-
-        # Ensure username exists and password is correct
-        if len(rows) != 1 or not check_password_hash(rows[0]["hash"], request.form.get("password")):
-            return apology("invalid username and/or password", 403)
-
-        # Remember which user has logged in
-        session["user_id"] = rows[0]["id"]
-
-        # Redirect user to home page
-        return redirect("/")
+        #Can make better
+        user = text('SELECT username, hash, id FROM users')
+        result = conn.execute(user)
+        u_l = []
+        id = 0
+        for row in result:
+            if row[0] == request.form.get("username"):
+                if check_password_hash(row[1], request.form.get("password")):
+                    session['user_id'] = row[2]
+                    return redirect("/")
+        
+        return apology('Sorry We cannot find you right now')
 
     # User reached route via GET (as by clicking a link or via redirect)
     else:
         return render_template("login.html")
 
-# Status: DONE
+# STATUS: Done
 @app.route("/logout")
 def logout():
     """Log user out"""
@@ -88,7 +118,7 @@ def logout():
     # Redirect user to login form
     return redirect("/")
 
-# Status: Done
+# STATUS: Done
 @app.route("/register", methods=["GET", "POST"])
 def register():
     """Register user"""
@@ -101,29 +131,38 @@ def register():
     password = request.form.get('password')
     confirmation = request.form.get('confirmation')
 
-    u = db.execute('SELECT username FROM users')
+    user = text('SELECT username, id FROM users')
+    result = conn.execute(user)
     u_l = []
-    for i in u:
-        u_l.append(i['username'])
+    id = 0
+    for row in result:
+        u_l.append(row[0])
+        id = row[1]
     if username == '' or username in u_l:
         return apology('input is blank or the username already exists.')
     u_l = []
     if password == '' or password != confirmation:
         return apology('Password input is blank or the passwords do not match.')
 
-    id = db.execute('INSERT INTO users(username, hash) VALUES(?, ?)', username, generate_password_hash(password))
-    session["user_id"] = id
+    # id = db.execute('INSERT INTO users(username, hash) VALUES(?, ?)', username, generate_password_hash(password))
+    ins = users.insert().values(username = username, hash = generate_password_hash(password), cash = 0, spent = 0, gains = 0, income = 0,)
+    conn.execute(ins)
 
-    # Set all values to 0 by default
-    db.execute("UPDATE users SET cash = 0, spent = 0, gains = 0, income = 0 WHERE id = ?", session['user_id'])
+    # To remember the signed in user
+    if id >= 0:
+        session['user_id'] = id + 1
+    else:
+        return apology('Something Went Wrong')
 
     return redirect("/")
 
+# STATUS: Done
 @app.route("/about")
 @login_required
 def about():
     return render_template('about.html')
 
+# STATUS: Done
 @app.route("/cashflow", methods=["GET", "POST"])
 @login_required
 def cashflow():
@@ -132,20 +171,32 @@ def cashflow():
     
     try:
         cash = int(request.form.get('cashflow'))
+        if cash < 0:
+            return apology("Your Income cannot be negative!")
     except:
         cash = 0
-    d = db.execute('SELECT cash FROM users WHERE id = ?', session['user_id'])
-    i_cash = int(d[0]['cash'])
-    db.execute('UPDATE users SET cash = ?, income = ? WHERE id = ?',cash + i_cash , cash, session['user_id'])
 
-    return redirect('/')
+    user = text("SELECT id, cash FROM users")
+    result = conn.execute(user)
+    for row in result:
+        if row[0] == session["user_id"]:
+            i_cash = row[1]
+            stmt = users.update().where(users.c.id == session['user_id']).values(cash = cash + i_cash, income = cash)
+            conn.execute(stmt)
+
+            return redirect('/')
+    return apology('Something Went Wrong')
 
 
+# STATUS: Done
 @app.route("/delete")
 @login_required
 def delete():
-    db.execute('DELETE FROM users WHERE id = ?', session['user_id'])
-    db.execute('DELETE FROM history WHERE id = ?', session['user_id'])
+    d_u = users.delete().where(users.c.id == session['user_id'])
+    conn.execute(d_u)
+
+    # d_h = history.delete().where(history.c.id == session['user_id'])
+    # conn.execute(d_h)
 
     # Forget any user_id
     session.clear()
@@ -154,6 +205,7 @@ def delete():
     return redirect("/")
 
 
+# STATUS: Done
 @app.route("/spent", methods=["GET", "POST"])
 @login_required
 def spent():
@@ -162,38 +214,56 @@ def spent():
 
     try:
         pay = int(request.form.get('spent'))
-        description = request.form.get('description')
+        descript = request.form.get('descript')
     except:
         pay = 0
     if pay < 0:
         return apology("Set your gains via Gains Section.")
 
-    d = db.execute("SELECT cash, spent FROM users WHERE id = ?", session['user_id'])
-    check = d[0]['cash']
-    i_spent = d[0]['spent']
+    user = text("SELECT id, cash, spent FROM users")
+    result = conn.execute(user)
+    for row in result:
+        if row[0] == session["user_id"]:
+            check = row[1]
+            i_spent = row[2]
 
-    if pay > check:
-        return apology("You Don't Have Enough Money to make this transactions")
+            if pay > check:
+                return apology('You Don\'t Have Enough Money to make this transactions')
 
-    new_cash = check - pay
-    new_spent = i_spent + pay
-    db.execute("UPDATE users SET cash = ?, spent = ? WHERE id = ?", new_cash, new_spent, session['user_id'])
+            new_cash = check - pay
+            new_spent = i_spent + pay
+            up=users.update().where(users.c.id==session['user_id']).values(cash = new_cash, spent = new_spent)
+            conn.execute(up)
 
-    if description == None:
-        description = "QUICK PAY"
+            if descript == None:
+                descript = "Quick Pay"
 
-    db.execute("INSERT INTO history VALUES(?, ?, ?)", session['user_id'], description, -pay)
-    return redirect("/")
+            # ins = history.insert().values(id = session['user_id'], descript = descript, cashflow = -pay)
+            # conn.execute(ins)
+
+            return redirect("/")
+    return apology("Something Went Wrong")
  
 
+# STATUS: Done
 @app.route("/reset")
 @login_required
 def reset():
-    db.execute("UPDATE users SET cash = 0, spent = 0, gains = 0, income = 0 WHERE id = ?", session['user_id'])
-    db.execute("INSERT INTO history VALUES(?, ?, ?)", session['user_id'], "RESET", 0)
-    return redirect('/')
+    user = text("SELECT id FROM users")
+    result = conn.execute(user)
+    for row in result:
+        if row[0] == session["user_id"]:
+            stmt = users.update().where(users.c.id == session['user_id']).values(cash = 0, spent = cash, gain = 0, income = 0)
+            conn.execute(stmt)
+
+            # ins = history.insert().values(id = session['user_id'], descript = 'RESET', cashflow = 0)
+            # conn.execute(ins)
+
+            return redirect('/')
+    return apology('Something Went Wrong')
 
 
+# STATUS: Done
 @app.route("/gain", methods=["GET", "POST"])
 @login_required
 def gain():
@@ -202,37 +272,50 @@ def gain():
     
     try:
         gain = int(request.form.get("gain"))
-        description = request.form.get("description")
+        descript = request.form.get("descript")
     except:
         gain = 0
+        descript = 'Something Went Wrong!'
     
     if gain < 0:
         return apology("Your Gains cannot be Negative. Register this via Spent Section.")
-    d = db.execute("SELECT cash, gains FROM users WHERE id = ?", session['user_id'])
-    i_cash = d[0]['cash']
-    i_gains = d[0]['gains']
-    db.execute("UPDATE users SET cash = ?, gains = ? WHERE id = ?", i_cash+gain,i_gains+gain, session['user_id'])
-    db.execute("INSERT INTO history VALUES(?, ?, ?)", session['user_id'], description, gain)
 
-    return redirect('/')
+    
+    user = text("SELECT id, cash, gains FROM users")
+    result = conn.execute(user)
+    for row in result:
+        if row[0] == session["user_id"]:
+            i_cash = row[1]
+            i_gains = row[2]
+
+            stmt = users.update().where(users.c.id == session['user_id']).values(cash = i_cash+gain, gains = i_gains+gain,)
+            conn.execute(stmt)
+
+            # ins = history.insert().values(id = session["user_id"], descript = descript, cashflow = gain,)
+            # conn.execute(ins)
+
+            return redirect('/')
+    return apology('Something Went Wrong')
 
 
+# STATUS: TBD
 @app.route("/history")
 @login_required
 def history():
-    history = db.execute('SELECT description, cashflow FROM history WHERE id = ?', session['user_id'])
-    loop = len(history)
-    jinga_loop = 0
-    descriptions = []
-    cashflows = []
+    return apology('WILL BE AVAILABLE IN FEW DAYS!')
+    # history = db.execute('SELECT descript, cashflow FROM history WHERE id = ?', session['user_id'])
+    # loop = len(history)
+    # jinga_loop = 0
+    # descripts = []
+    # cashf = []
 
-    for i in range(loop):
-        his = history[loop - i - 1]['description']
-        if his == "RESET":
-            break
-        descriptions.append(his)
-        cashflows.append(history[loop - i - 1]['cashflow'])
+    # for i in range(loop):
+    #     his = history[loop - i - 1]['descript']
+    #     if his == "RESET":
+    #         break
+    #     descripts.append(his)
+    #     cashf.append(history[loop - i - 1]['cashflow'])
 
-        jinga_loop += 1
-    return render_template("history.html", jinga_loop=jinga_loop, descriptions=descriptions, cashflows=cashflows)
+    #     jinga_loop += 1
+    # return render_template("history.html", jinga_loop=jinga_loop, descripts=descripts, cashf=cashf)
 
