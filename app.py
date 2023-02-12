@@ -20,7 +20,8 @@ app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
 # Make Connection to the database
-engine = create_engine('postgresql://gaurav:sytApgILs5xeFSw2dHPPMUjOfbRlJPU4@dpg-cfjgb31a6gductijtfgg-a.singapore-postgres.render.com/database_li2o', echo = False)
+# postgresql://gaurav:sytApgILs5xeFSw2dHPPMUjOfbRlJPU4@dpg-cfjgb31a6gductijtfgg-a.singapore-postgres.render.com/database_li2o
+engine = create_engine('postgresql://gaurav:sytApgILs5xeFSw2dHPPMUjOfbRlJPU4@dpg-cfjgb31a6gductijtfgg-a.singapore-postgres.render.com/database_li2o', echo = False)    # , connect_args={"check_same_thread": False} for sqlite3 only
 conn = engine.connect()
 
 # Make Tables:
@@ -38,6 +39,7 @@ users = Table(
 
 history = Table(
     'history', meta,
+    Column('h_id', Integer, primary_key = True),
     Column('id', Integer),
     Column('descript', Text),
     Column('cashflow', Integer),
@@ -149,10 +151,14 @@ def register():
     conn.execute(ins)
 
     # To remember the signed in user
-    if id >= 0:
-        session['user_id'] = id + 1
-    else:
-        return apology('Something Went Wrong')
+    s = users.select().where(users.c.username == username)
+    result = conn.execute(s)
+    for row in result:
+        session['user_id'] = row[0]
+    # if id >= 0:
+    #     session['user_id'] = id + 1
+    # else:
+    #     return apology('Something Went Wrong')
 
     return redirect("/")
 
@@ -238,8 +244,8 @@ def spent():
             if descript == None:
                 descript = "Quick Pay"
 
-            # ins = history.insert().values(id = session['user_id'], descript = descript, cashflow = -pay)
-            # conn.execute(ins)
+            # ins_s = history.insert().values(id = session['user_id'], descript = descript, cashflow = -pay,)
+            # conn.execute(ins_s)
 
             return redirect("/")
     return apology("Something Went Wrong")
@@ -253,7 +259,7 @@ def reset():
     result = conn.execute(user)
     for row in result:
         if row[0] == session["user_id"]:
-            reset = users.update().where(users.c.id == session['user_id']).values(cash = 0, spent = 0, gain = 0, income = 0)
+            reset = users.update().where(users.c.id == session['user_id']).values(cash = 0, spent = 0, gains = 0, income = 0)
             conn.execute(reset)
 
             # ins = history.insert().values(id = session['user_id'], descript = 'RESET', cashflow = 0)
