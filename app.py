@@ -253,8 +253,8 @@ def reset():
     result = conn.execute(user)
     for row in result:
         if row[0] == session["user_id"]:
-            stmt = users.update().where(users.c.id == session['user_id']).values(cash = 0, spent = 0, gain = 0, income = 0)
-            conn.execute(stmt)
+            reset = users.update().where(users.c.id == session['user_id']).values(cash = 0, spent = 0, gain = 0, income = 0)
+            conn.execute(reset)
 
             # ins = history.insert().values(id = session['user_id'], descript = 'RESET', cashflow = 0)
             # conn.execute(ins)
