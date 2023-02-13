@@ -151,14 +151,14 @@ def register():
     conn.execute(ins)
 
     # To remember the signed in user
-    s = users.select().where(users.c.username == username)
-    result = conn.execute(s)
-    for row in result:
-        session['user_id'] = row[0]
-    # if id >= 0:
-    #     session['user_id'] = id + 1
-    # else:
-    #     return apology('Something Went Wrong')
+    # s = users.select().where(users.c.username == username)
+    # result = conn.execute(s)
+    # for row in result:
+    #     session['user_id'] = row[0]
+    if id >= 0:
+        session['user_id'] = id + 1
+    else:
+        return apology('Something Went Wrong')
 
     return redirect("/")
 
@@ -193,7 +193,7 @@ def cashflow():
             return redirect('/')
     return apology('Something Went Wrong')
 
-
+'''
 # STATUS: Done
 @app.route("/delete")
 @login_required
@@ -209,6 +209,7 @@ def delete():
 
     # Redirect user to login form
     return redirect("/")
+'''
 
 
 # STATUS: Done
