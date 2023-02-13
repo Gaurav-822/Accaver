@@ -12,6 +12,10 @@
 
         <title>ACCAVER: {% block title %}{% endblock %}</title> <!-- Title According to Webpage using Jinga-->
         <link rel="icon" type="image/x-icon" href="/static/fav.png">
+        <script
+        src="https://kit.fontawesome.com/db21924de1.js"
+        crossorigin="anonymous">
+        </script>
     </head>
 
     <body>
@@ -50,5 +54,6 @@
         <main class="container-fluid py-5 text-center">
             {% block main %}{% endblock %}
         </main>
+            {% block footer %}{% endblock %}
     </body>
 </html>
