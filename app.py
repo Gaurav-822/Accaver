@@ -21,7 +21,7 @@ Session(app)
 
 # Make Connection to the database
 # postgresql://gaurav:sytApgILs5xeFSw2dHPPMUjOfbRlJPU4@dpg-cfjgb31a6gductijtfgg-a.singapore-postgres.render.com/database_li2o
-engine = create_engine('sqlite:///data.db', echo = False, connect_args={"check_same_thread": False})    # , connect_args={"check_same_thread": False} for sqlite3 only
+engine = create_engine('postgresql://gaurav:sytApgILs5xeFSw2dHPPMUjOfbRlJPU4@dpg-cfjgb31a6gductijtfgg-a.singapore-postgres.render.com/database_li2o', echo = False)    # , connect_args={"check_same_thread": False} for sqlite3 only
 conn = engine.connect()
 
 # Make Tables:
