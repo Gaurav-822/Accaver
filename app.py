@@ -37,9 +37,8 @@ users = Table(
     Column('income', Integer),
 )
 
-history = Table(
+history_t = Table(
     'history', meta,
-    Column('h_id', Integer, primary_key = True),
     Column('id', Integer),
     Column('descript', Text),
     Column('cashflow', Integer),
@@ -158,7 +157,7 @@ def register():
     if id >= 0:
         session['user_id'] = id + 1
     else:
-        return apology('Something Went Wrong')
+        return apology('Account Created, Failed to go to the main page, please Login in now.')
 
     return redirect("/")
 
@@ -201,7 +200,7 @@ def delete():
     d_u = users.delete().where(users.c.id == session['user_id'])
     conn.execute(d_u)
 
-    # d_h = history.delete().where(history.c.id == session['user_id'])
+    # d_h = history_t.delete().where(history.c.id == session['user_id'])
     # conn.execute(d_h)
 
     # Forget any user_id
@@ -245,8 +244,8 @@ def spent():
             if descript == None:
                 descript = "Quick Pay"
 
-            # ins_s = history.insert().values(id = session['user_id'], descript = descript, cashflow = -pay,)
-            # conn.execute(ins_s)
+            ins_s = history_t.insert().values(id = session['user_id'], descript = descript, cashflow = -pay,)
+            conn.execute(ins_s)
 
             return redirect("/")
     return apology("Something Went Wrong")
@@ -263,8 +262,8 @@ def reset():
             reset = users.update().where(users.c.id == session['user_id']).values(cash = 0, spent = 0, gains = 0, income = 0)
             conn.execute(reset)
 
-            # ins = history.insert().values(id = session['user_id'], descript = 'RESET', cashflow = 0)
-            # conn.execute(ins)
+            ins = history_t.insert().values(id = session['user_id'], descript = 'RESET', cashflow = 0)
+            conn.execute(ins)
 
             return redirect('/')
     return apology('Something Went Wrong')
@@ -298,31 +297,37 @@ def gain():
             stmt = users.update().where(users.c.id == session['user_id']).values(cash = i_cash+gain, gains = i_gains+gain,)
             conn.execute(stmt)
 
-            # ins = history.insert().values(id = session["user_id"], descript = descript, cashflow = gain,)
-            # conn.execute(ins)
+            ins = history_t.insert().values(id = session["user_id"], descript = descript, cashflow = gain,)
+            conn.execute(ins)
 
             return redirect('/')
     return apology('Something Went Wrong')
 
 
-# STATUS: TBD
+# STATUS: Done
 @app.route("/history")
 @login_required
 def history():
-    return apology('WILL BE AVAILABLE IN FEW DAYS!')
+    # return apology('WILL BE AVAILABLE IN FEW DAYS!')
     # history = db.execute('SELECT descript, cashflow FROM history WHERE id = ?', session['user_id'])
-    # loop = len(history)
-    # jinga_loop = 0
-    # descripts = []
-    # cashf = []
+    s = history_t.select().where(history_t.c.id == session['user_id'])
+    history = conn.execute(s)
+    all_data = []
+    for row in history:
+        all_data.append(row)
+    loop = len(all_data)
+    jinga_loop = 0
+    descripts = []
+    cashf = []
 
-    # for i in range(loop):
-    #     his = history[loop - i - 1]['descript']
-    #     if his == "RESET":
-    #         break
-    #     descripts.append(his)
-    #     cashf.append(history[loop - i - 1]['cashflow'])
+    for i in range(loop):
+        his = all_data[loop - i - 1][1]
+        if his == "RESET":
+            break
+        descripts.append(his)
+        cashf.append(all_data[loop - i - 1][2])
 
-    #     jinga_loop += 1
-    # return render_template("history.html", jinga_loop=jinga_loop, descripts=descripts, cashf=cashf)
+        jinga_loop += 1
+    
+    return render_template("history.html", jinga_loop=jinga_loop, descripts=descripts, cashf=cashf)
 
