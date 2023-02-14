@@ -21,13 +21,13 @@ Session(app)
 
 # Make Connection to the database
 # postgresql://gaurav:sytApgILs5xeFSw2dHPPMUjOfbRlJPU4@dpg-cfjgb31a6gductijtfgg-a.singapore-postgres.render.com/database_li2o
-engine = create_engine('postgresql://gaurav:sytApgILs5xeFSw2dHPPMUjOfbRlJPU4@dpg-cfjgb31a6gductijtfgg-a.singapore-postgres.render.com/database_li2o', echo = False)    # , connect_args={"check_same_thread": False} for sqlite3 only
+engine = create_engine('sqlite:///data.db', echo = False, connect_args={"check_same_thread": False})    # , connect_args={"check_same_thread": False} for sqlite3 only
 conn = engine.connect()
 
 # Make Tables:
 meta = MetaData()
-users = Table(
-    'users', meta,
+acc_users = Table(
+    'acc_users', meta,
     Column('id', Integer, primary_key = True),
     Column('username', Text),
     Column('hash', Text),
@@ -38,7 +38,7 @@ users = Table(
 )
 
 history_t = Table(
-    'history', meta,
+    'acc_history', meta,
     Column('id', Integer),
     Column('descript', Text),
     Column('cashflow', Integer),
@@ -58,7 +58,7 @@ def after_request(response):
 @app.route("/", methods=['GET', 'POST'])
 @login_required
 def index():
-    user = text("SELECT id, cash, spent, income, gains FROM users")
+    user = text("SELECT id, cash, spent, income, gains FROM acc_users")
     result = conn.execute(user)
     for row in result:
         if row[0] == session["user_id"]:
@@ -92,7 +92,7 @@ def login():
 
         # Query database for username
         #Can make better
-        user = text('SELECT username, hash, id FROM users')
+        user = text('SELECT username, hash, id FROM acc_users')
         result = conn.execute(user)
         u_l = []
         id = 0
@@ -132,7 +132,7 @@ def register():
     password = request.form.get('password')
     confirmation = request.form.get('confirmation')
 
-    user = text('SELECT username, id FROM users')
+    user = text('SELECT username, id FROM acc_users')
     result = conn.execute(user)
     u_l = []
     id = 0
@@ -145,12 +145,12 @@ def register():
     if password == '' or password != confirmation:
         return apology('Password input is blank or the passwords do not match.')
 
-    # id = db.execute('INSERT INTO users(username, hash) VALUES(?, ?)', username, generate_password_hash(password))
-    ins = users.insert().values(username = username, hash = generate_password_hash(password), cash = 0, spent = 0, gains = 0, income = 0,)
+    # id = db.execute('INSERT INTO acc_users(username, hash) VALUES(?, ?)', username, generate_password_hash(password))
+    ins = acc_users.insert().values(username = username, hash = generate_password_hash(password), cash = 0, spent = 0, gains = 0, income = 0,)
     conn.execute(ins)
 
     # To remember the signed in user
-    # s = users.select().where(users.c.username == username)
+    # s = acc_users.select().where(acc_users.c.username == username)
     # result = conn.execute(s)
     # for row in result:
     #     session['user_id'] = row[0]
@@ -181,12 +181,12 @@ def cashflow():
     except:
         cash = 0
 
-    user = text("SELECT id, cash FROM users")
+    user = text("SELECT id, cash FROM acc_users")
     result = conn.execute(user)
     for row in result:
         if row[0] == session["user_id"]:
             i_cash = row[1]
-            stmt = users.update().where(users.c.id == session['user_id']).values(cash = cash + i_cash, income = cash)
+            stmt = acc_users.update().where(acc_users.c.id == session['user_id']).values(cash = cash + i_cash, income = cash)
             conn.execute(stmt)
 
             return redirect('/')
@@ -197,10 +197,10 @@ def cashflow():
 @app.route("/delete")
 @login_required
 def delete():
-    d_u = users.delete().where(users.c.id == session['user_id'])
+    d_u = acc_users.delete().where(acc_users.c.id == session['user_id'])
     conn.execute(d_u)
 
-    # d_h = history_t.delete().where(history.c.id == session['user_id'])
+    # d_h = history_t.delete().where(acc_history.c.id == session['user_id'])
     # conn.execute(d_h)
 
     # Forget any user_id
@@ -226,7 +226,7 @@ def spent():
     if pay < 0:
         return apology("Set your gains via Gains Section.")
 
-    user = text("SELECT id, cash, spent FROM users")
+    user = text("SELECT id, cash, spent FROM acc_users")
     result = conn.execute(user)
     for row in result:
         if row[0] == session["user_id"]:
@@ -238,7 +238,7 @@ def spent():
 
             new_cash = check - pay
             new_spent = i_spent + pay
-            up=users.update().where(users.c.id==session['user_id']).values(cash = new_cash, spent = new_spent)
+            up=acc_users.update().where(acc_users.c.id==session['user_id']).values(cash = new_cash, spent = new_spent)
             conn.execute(up)
 
             if descript == None:
@@ -255,11 +255,11 @@ def spent():
 @app.route("/reset")
 @login_required
 def reset():
-    user = text("SELECT id FROM users")
+    user = text("SELECT id FROM acc_users")
     result = conn.execute(user)
     for row in result:
         if row[0] == session["user_id"]:
-            reset = users.update().where(users.c.id == session['user_id']).values(cash = 0, spent = 0, gains = 0, income = 0)
+            reset = acc_users.update().where(acc_users.c.id == session['user_id']).values(cash = 0, spent = 0, gains = 0, income = 0)
             conn.execute(reset)
 
             ins = history_t.insert().values(id = session['user_id'], descript = 'RESET', cashflow = 0)
@@ -287,14 +287,14 @@ def gain():
         return apology("Your Gains cannot be Negative. Register this via Spent Section.")
 
     
-    user = text("SELECT id, cash, gains FROM users")
+    user = text("SELECT id, cash, gains FROM acc_users")
     result = conn.execute(user)
     for row in result:
         if row[0] == session["user_id"]:
             i_cash = row[1]
             i_gains = row[2]
 
-            stmt = users.update().where(users.c.id == session['user_id']).values(cash = i_cash+gain, gains = i_gains+gain,)
+            stmt = acc_users.update().where(acc_users.c.id == session['user_id']).values(cash = i_cash+gain, gains = i_gains+gain,)
             conn.execute(stmt)
 
             ins = history_t.insert().values(id = session["user_id"], descript = descript, cashflow = gain,)
@@ -305,15 +305,15 @@ def gain():
 
 
 # STATUS: Done
-@app.route("/history")
+@app.route("/acc_history")
 @login_required
-def history():
+def acc_history():
     # return apology('WILL BE AVAILABLE IN FEW DAYS!')
-    # history = db.execute('SELECT descript, cashflow FROM history WHERE id = ?', session['user_id'])
+    # acc_history = db.execute('SELECT descript, cashflow FROM acc_history WHERE id = ?', session['user_id'])
     s = history_t.select().where(history_t.c.id == session['user_id'])
-    history = conn.execute(s)
+    acc_history = conn.execute(s)
     all_data = []
-    for row in history:
+    for row in acc_history:
         all_data.append(row)
     loop = len(all_data)
     jinga_loop = 0
@@ -329,5 +329,5 @@ def history():
 
         jinga_loop += 1
     
-    return render_template("history.html", jinga_loop=jinga_loop, descripts=descripts, cashf=cashf)
+    return render_template("acc_history.html", jinga_loop=jinga_loop, descripts=descripts, cashf=cashf)
 
