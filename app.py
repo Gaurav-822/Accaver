@@ -20,8 +20,8 @@ app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
 # Make Connection to the database
-# postgresql://gaurav:sytApgILs5xeFSw2dHPPMUjOfbRlJPU4@dpg-cfjgb31a6gductijtfgg-a.singapore-postgres.render.com/database_li2o
-engine = create_engine('postgresql://gaurav:sytApgILs5xeFSw2dHPPMUjOfbRlJPU4@dpg-cfjgb31a6gductijtfgg-a.singapore-postgres.render.com/database_li2o', echo = False)    # , connect_args={"check_same_thread": False} for sqlite3 only
+# postgresql://accaver_d_user:JiIYTQo0MsNC1QiNxduMgZRX0Pyksq8A@dpg-cfm5ojla499591cls1vg-a.singapore-postgres.render.com/accaver_d
+engine = create_engine('postgresql://accaver_d_user:JiIYTQo0MsNC1QiNxduMgZRX0Pyksq8A@dpg-cfm5ojla499591cls1vg-a.singapore-postgres.render.com/accaver_d', echo = False)    # , connect_args={"check_same_thread": False} for sqlite3 only
 conn = engine.connect()
 
 # Make Tables:
