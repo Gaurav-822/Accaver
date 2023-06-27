@@ -21,7 +21,7 @@ Session(app)
 
 # Make Connection to the database
 # postgresql://accaver_d_user:JiIYTQo0MsNC1QiNxduMgZRX0Pyksq8A@dpg-cfm5ojla499591cls1vg-a.singapore-postgres.render.com/accaver_d
-engine = create_engine('postgresql://accaver_d_user:JiIYTQo0MsNC1QiNxduMgZRX0Pyksq8A@dpg-cfm5ojla499591cls1vg-a.singapore-postgres.render.com/accaver_d', echo = False)    # , connect_args={"check_same_thread": False} for sqlite3 only
+engine = create_engine('sqlite:///data.db', echo = False, connect_args={"check_same_thread": False})    # , connect_args={"check_same_thread": False} for sqlite3 only
 conn = engine.connect()
 
 # Make Tables:
